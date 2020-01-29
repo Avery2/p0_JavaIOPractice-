@@ -170,6 +170,20 @@ public class Main {
 
     // currRoom.getLeft().setGoal(true);
     direction move;
+    // @formatter:off
+    System.out.println("Welcome to room explorer.\n\n" + 
+        "This is an example room with a hallway to the right called room 0:\n\n" + 
+        " ┌───┐\n" + 
+        " │ 0 ├─\n" + 
+        " └───┘\n\n" + 
+        "You can navigate to the right by typing w, a, s, d when prompted.\n\n" + 
+        "Your goal is to reach the final room marked with an X:\n\n" + 
+        " ┌───┐\n" + 
+        " │ X │\n" + 
+        " └───┘\n\n" + 
+        "GO!\n\n" + 
+        "===================");
+    // @formatter:on
 
     while (true) {
       printRoom(currRoom);
