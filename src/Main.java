@@ -7,6 +7,7 @@
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.Scanner;
 
 /**
@@ -16,40 +17,83 @@ import java.util.Scanner;
  *
  */
 public class Main {
-  private static Scanner sc;
-  private static Scanner text;
 
-  public enum direction {
+  private static final String title = "Justin Chan jachan@wisc.edu LEC 1";
+  private static final Scanner sc = new Scanner(System.in); // TODO change to final
+  private static Scanner text;
+  private static PrintWriter pw;
+
+  protected enum direction {
     UP, DOWN, LEFT, RIGHT
   }
 
   /**
    * Initializes resources.
    */
-  public static void initialize() {
-    // initialize
-    sc = new Scanner(System.in);
+  private static void initialize() {
     try {
-      text = new Scanner(new File("stuff.txt"));
-    } catch (FileNotFoundException f) {
-      System.out.println("File not found");
+      text = new Scanner(new File(getFileName(true)));
+    } catch (FileNotFoundException e) {
+      System.out.println("No file of that name was found.");
+      // TODO hadnling invalid more than this?
+    }
+    try {
+      pw = new PrintWriter(new File("output.txt"));
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
     }
     // System.out.println("Text file says: " + text.nextLine());
-  }
-
-  public static void pr() {
-    System.out.println("Hi");
   }
 
   /**
    * Closes resources.
    */
-  public static void terminate() {
+  private static void terminate() {
     // close streams
     sc.close();
     if (text != null) {
       text.close();
     }
+  }
+
+  private static String getFileName(boolean firstAsk) {
+    if (firstAsk) {
+      System.out.println("If you played before, what is the name of your input file?");
+    }
+    System.out.print("> ");
+    String response = sc.nextLine();
+    if (response.length() < 4) {
+      System.out.println("Must be a text file (*.txt)");
+      return getFileName(false);
+    } else if (response.substring(response.length() - 4, response.length()).equals(".txt")) {
+      return response;
+    } else {
+      System.out.println("Must be a text file (*.txt)");
+      return getFileName(false);
+    }
+  }
+
+  private static void printOpenMenu() {
+    boolean invalidInput = true;
+    String name;
+    /*
+     * while (invalid input) ask test use
+     */
+    System.out.println(title);
+ // @formatter:off
+    System.out.println("\nWelcome to room explorer.\n\n" + 
+        "This is an example room with a hallway to the right called room 0:\n\n" + 
+        " ┌───┐\n" + 
+        " │ 0 ├─\n" + 
+        " └───┘\n\n" + 
+        "You can navigate to the right by typing w, a, s, d when prompted.\n\n" + 
+        "Your goal is to reach the final room marked with an X:\n\n" + 
+        " ┌───┐\n" + 
+        " │ X │\n" + 
+        " └───┘\n\n" + 
+        "GO!\n\n" + 
+        "===================");
+    // @formatter:on
   }
 
   /**
@@ -58,7 +102,7 @@ public class Main {
    * @param firstAsk
    * @return An movement direction.
    */
-  public static direction getMovement(Room rm, boolean firstAsk) {
+  private static direction nextMovement(Room rm, boolean firstAsk) {
     if (firstAsk) {
       System.out.println("Which direction?");
       if (rm.hasUp()) {
@@ -90,108 +134,56 @@ public class Main {
           return direction.UP;
         } else {
           System.out.println("No room above.");
-          return getMovement(rm, false);
+          return nextMovement(rm, false);
         }
       case 's':
         if (rm.hasDown()) {
           return direction.DOWN;
         } else {
           System.out.println("No room below.");
-          return getMovement(rm, false);
+          return nextMovement(rm, false);
         }
       case 'a':
         if (rm.hasLeft()) {
           return direction.LEFT;
         } else {
           System.out.println("No room to the left.");
-          return getMovement(rm, false);
+          return nextMovement(rm, false);
         }
       case 'd':
         if (rm.hasRight()) {
           return direction.RIGHT;
         } else {
           System.out.println("No room to the right.");
-          return getMovement(rm, false);
+          return nextMovement(rm, false);
         }
       default:
         System.out.println("Invalid input.");
-        return getMovement(rm, false);
+        return nextMovement(rm, false);
     }
   }
 
-  public static void printRoom(Room rm) {
-    String tag;
-    if (rm.isGoal()) {
-      tag = "X";
-    } else {
-      tag = "" + rm.getId();
-    }
-    System.out.print("\n  ┌─");
-    // up?
-    if (rm.hasUp()) {
-      System.out.print("┴");
-    } else {
-      System.out.print("─");
-    }
-    System.out.print("─┐\n");
-    System.out.print(" ");
-    // left?
-    if (rm.hasLeft()) {
-      System.out.print("─┤");
-    } else {
-      System.out.print(" │");
-    }
-    System.out.print(" " + tag + " ");
-    // right?
-    if (rm.hasRight()) {
-      System.out.print("├─");
-    } else {
-      System.out.print("│");
-    }
-    System.out.print("\n");
-    System.out.print("  └─");
-    // down?
-    if (rm.hasDown()) {
-      System.out.print("┬");
-    } else {
-      System.out.print("─");
-    }
-    System.out.print("─┘\n\n");
-  }
 
   public static void main(String[] args) {
     initialize();
-    Room center = new Room();
-    center.generateRoom(direction.UP).generateRoom(direction.UP);
-    center.generateRoom(direction.DOWN).generateRoom(direction.DOWN);
-    center.generateRoom(direction.LEFT).generateRoom(direction.LEFT);
-    center.generateRoom(direction.RIGHT).generateRoom(direction.RIGHT).setGoal(true);
-    Room currRoom = center;
+    printOpenMenu();
 
-    // currRoom.getLeft().setGoal(true);
+    Room root = new Room(); // TODO random generation
+    root.generateRoom(direction.UP).generateRoom(direction.UP);
+    root.generateRoom(direction.DOWN).generateRoom(direction.DOWN);
+    root.generateRoom(direction.LEFT).generateRoom(direction.LEFT);
+    root.generateRoom(direction.RIGHT).generateRoom(direction.RIGHT).setGoal(true);
+
+    Room currRoom = root;
     direction move;
-    // @formatter:off
-    System.out.println("Welcome to room explorer.\n\n" + 
-        "This is an example room with a hallway to the right called room 0:\n\n" + 
-        " ┌───┐\n" + 
-        " │ 0 ├─\n" + 
-        " └───┘\n\n" + 
-        "You can navigate to the right by typing w, a, s, d when prompted.\n\n" + 
-        "Your goal is to reach the final room marked with an X:\n\n" + 
-        " ┌───┐\n" + 
-        " │ X │\n" + 
-        " └───┘\n\n" + 
-        "GO!\n\n" + 
-        "===================");
-    // @formatter:on
 
     while (true) {
-      printRoom(currRoom);
+      currRoom.printRoom();
       if (currRoom.isGoal()) {
-        System.out.println("You win");
+        System.out.println("You win!");
         break;
       }
-      move = getMovement(currRoom, true);
+      move = nextMovement(currRoom, true);
       switch (move) {
         case UP:
           currRoom = currRoom.getUp();
@@ -208,6 +200,14 @@ public class Main {
       }
       System.out.println("===============");
     }
+    
+    // temporary
+    while (text.hasNext()) {
+      System.out.println(text.nextLine());
+    }
+    pw.println("Some words.");
+    pw.flush();
+    
     terminate();
   }
 }
